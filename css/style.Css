@@ -90,6 +90,48 @@
 
   .btn-primary:hover { background: #a84422; transform: translateY(-1px); }
 
+  /* Filter Buttons */
+  .filter-buttons {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem 2.5rem;
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .filter-btn:hover {
+    background: var(--cream);
+    border-color: var(--accent2);
+    color: var(--ink);
+  }
+
+  .filter-btn.active {
+    background: var(--accent2);
+    color: white;
+    border-color: var(--accent2);
+  }
+
+  .filter-btn.active:hover {
+    background: #1e5a9a;
+  }
+
   .btn-pdf {
     background: #1a7a4a;
     color: white;
