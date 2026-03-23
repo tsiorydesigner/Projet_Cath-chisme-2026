@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestion des Élèves</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<link rel="stylesheet" href="css/style.Css">
+<style>
+  
+</style>
+</head>
+<body>
+
+<header>
+  <h1> Élèves<span>Gestion</span></h1>
+  <div class="header-actions">
+    <input type="text" class="search-bar" id="searchInput" placeholder="🔍 Rechercher..." oninput="renderStudents()">
+    <div class="pdf-wrapper">
+      <button class="btn-pdf" onclick="togglePdfDropdown()">📄 Exporter pdf▾</button>
+      <div class="pdf-dropdown" id="pdfDropdown">
+        <div class="pdf-dropdown-item" onclick="exportListePDF()">
+          <span class="icon">📋</span>
+          <div>
+            <div style="font-weight:600">Liste complète</div>
+            <div style="font-size:0.78rem;color:#888">Tableau de tous les élèves</div>
+          </div>
+        </div>
+        <div class="pdf-dropdown-item" onclick="exportFichesPDF()">
+          <span class="icon">📑</span>
+          <div>
+            <div style="font-weight:600">Fiches individuelles</div>
+            <div style="font-size:0.78rem;color:#888">Une fiche par élève</div>
+          </div>
+        </div>
+        <div class="pdf-dropdown-item" onclick="exportStatsPDF()">
+          <span class="icon">📊</span>
+          <div>
+            <div style="font-weight:600">Rapport statistiques</div>
+            <div style="font-size:0.78rem;color:#888">Résumé et données globales</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="openAddModal()">+ Ajouter un élève</button>
+  </div>
+</header>
+
+<main>
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-icon blue">👨‍👩‍👧‍👦</div>
+      <div>
+        <div class="stat-label">Total élèves</div>
+        <div class="stat-value" id="statTotal">0</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon red">👱</div>
+      <div>
+        <div class="stat-label">Garçons</div>
+        <div class="stat-value" id="statGarcons">0</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon gold">👧</div>
+      <div>
+        <div class="stat-label">Filles</div>
+        <div class="stat-value" id="statFilles">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-header">
+    <h2>Liste des élèves</h2>
+    <div class="view-toggle">
+      <button class="view-btn active" id="btnGrid" onclick="setView('grid')">⊞ Grille</button>
+      <button class="view-btn" id="btnList" onclick="setView('list')">☰ Liste</button>
+    </div>
+  </div>
+
+  <div id="studentsContainer"></div>
+</main>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="formModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Nouvel Élève</div>
+      <button class="btn-close" onclick="closeModal('formModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Photo -->
+      <div class="photo-upload">
+        <div class="photo-preview" id="photoPreview" onclick="document.getElementById('photoInput').click()">
+          <span id="photoPlaceholder">👤</span>
+          <img id="photoImg" style="display:none">
+          <div class="overlay">📷</div>
+        </div>
+        <div class="photo-hint">Cliquer pour ajouter une photo</div>
+        <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(event)">
+      </div>
+
+      <!-- Infos personnelles -->
+      <div class="form-section">
+        <div class="section-label">Informations personnelles</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Nom *</label>
+            <input type="text" id="fNom" placeholder="ex: DUPONT">
+          </div>
+          <div class="field">
+            <label>Prénom *</label>
+            <input type="text" id="fPrenom" placeholder="ex: Marie">
+          </div>
+          <div class="field">
+            <label>Date de naissance *</label>
+            <input type="date" id="fDateNaissance">
+          </div>
+          <div class="field">
+            <label>Lieu de naissance *</label>
+            <input type="text" id="fLieuNaissance" placeholder="ex: Paris">
+          </div>
+          <div class="field">
+            <label>Sexe</label>
+            <select id="fSexe">
+              <option value="">Sélectionner</option>
+              <option value="M">Masculin</option>
+              <option value="F">Féminin</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Numéro de téléphone</label>
+            <input type="tel" id="fTelephone" placeholder="ex: 06 12 34 56 78">
+          </div>
+        </div>
+      </div>
+
+      <!-- Parents -->
+      <div class="form-section">
+        <div class="section-label">Informations des parents</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Nom du père</label>
+            <input type="text" id="fNomPere" placeholder="ex: Jean DUPONT">
+          </div>
+          <div class="field">
+            <label>Nom de la mère</label>
+            <input type="text" id="fNomMere" placeholder="ex: Sophie MARTIN">
+          </div>
+          <div class="field">
+            <label>Téléphone du père</label>
+            <input type="tel" id="fTelPere" placeholder="ex: 06 00 00 00 00">
+          </div>
+          <div class="field">
+            <label>Téléphone de la mère</label>
+            <input type="tel" id="fTelMere" placeholder="ex: 06 00 00 00 01">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('formModal')">Annuler</button>
+      <button class="btn-primary" onclick="saveStudent()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Fiche de l'élève</div>
+      <button class="btn-close" onclick="closeModal('detailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="detailContent"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('detailModal')">Fermer</button>
+      <button class="btn-pdf" id="detailPdfBtn" style="padding:0.55rem 1rem;font-size:0.85rem">📄 PDF</button>
+      <button class="btn-primary" id="detailEditBtn">✏️ Modifier</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+ <script src="js/main.js"></script>
+</body>
+</html>
