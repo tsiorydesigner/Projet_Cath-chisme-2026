@@ -2,6 +2,18 @@ let students = JSON.parse(localStorage.getItem('eleves') || '[]');
 let editingId = null;
 let viewMode = 'grid';
 let currentPhoto = null;
+let currentFilter = 'all';
+
+function filterStudents(filter) {
+  currentFilter = filter;
+  
+  // Update active button
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+  
+  renderStudents();
+}
 
 function generateId() {
   return 'EL-' + Date.now().toString(36).toUpperCase();
@@ -36,9 +48,20 @@ function getPhotoDisplay(student, size = 'card') {
 
 function renderStudents() {
   const query = document.getElementById('searchInput').value.toLowerCase();
-  const filtered = students.filter(s =>
+  let filtered = students.filter(s =>
     `${s.nom} ${s.prenom} ${s.lieuNaissance}`.toLowerCase().includes(query)
   );
+
+  // Apply category filter
+  if (currentFilter === 'garcons') {
+    filtered = filtered.filter(s => s.sexe === 'M');
+  } else if (currentFilter === 'filles') {
+    filtered = filtered.filter(s => s.sexe === 'F');
+  } else if (currentFilter === 'actifs') {
+    filtered = filtered.filter(s => s.statut !== 'inactif');
+  } else if (currentFilter === 'inactifs') {
+    filtered = filtered.filter(s => s.statut === 'inactif');
+  }
 
   // Stats
   document.getElementById('statTotal').textContent = students.length;
@@ -209,8 +232,11 @@ function saveStudent() {
     return;
   }
 
+  // On définit l'ID explicitement pour éviter toute ambiguïté
+  const finalId = editingId || generateId();
+
   const data = {
-    id: editingId || generateId(),
+    id: finalId,
     nom: nom.toUpperCase(),
     prenom,
     dateNaissance,
@@ -225,7 +251,7 @@ function saveStudent() {
   };
 
   if (editingId) {
-    const idx = students.findIndex(s => s.id === editingId);
+    const idx = students.findIndex(s => s.id === finalId);
     students[idx] = data;
     showToast('✅ Élève modifié avec succès', 'success');
   } else {
@@ -240,7 +266,8 @@ function saveStudent() {
 
 function deleteStudent(id) {
   if (!confirm('Voulez-vous vraiment supprimer cet élève ?')) return;
-  students = students.filter(s => s.id !== id);
+  // On force la conversion en String pour assurer une comparaison stricte exacte
+  students = students.filter(s => String(s.id) !== String(id));
   localStorage.setItem('eleves', JSON.stringify(students));
   renderStudents();
   showToast('🗑️ Élève supprimé', 'error');
